@@ -77,7 +77,7 @@ function to retrieve the first argument and concatenate it with the string
 
 Don't let the different kinds of brackets confuse you: Instead of Java and C++'s
 `<>` for type or template parameters, Scala uses `[]`. Indexing an array does not
-have get any special syntax (actually, Scala does not treat arrays special at
+have any special syntax (actually, Scala does not treat arrays specially at
 all), as we have seen in the example, so there's no index-operator. The rules
 are quite simple: value parameters use `()` and type parameters `[]`.
 Statement lists are enclosed in `{}`, this one's the same in all 3 languages.
