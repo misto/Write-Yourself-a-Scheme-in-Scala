@@ -43,14 +43,15 @@ named `chapter1` to contain our first example. Packages describe a hierarchical
 organization of the code and are used to structure your code at large.
 
 If you're coming from Java, you're already familiar with packages, but the next
-declaration might be surprising: an object named `HelloWorld`. An object is almost
-like a class, except that the compiler automatically creates one single
-instance -- that's why their full name is *singleton objects*, like the infamous design
-pattern -- for you and that you cannot create new instances of it. Objects
-supersede Java and C++'s static methods and variables: you can think of all the methods and
-variables inside an object as being static. Objects can also extend other
-classes, implement interfaces and be used just like any other intance of a
-class.
+declaration might be surprising: an object named `HelloWorld`. An object is
+almost like a class, except that the compiler automatically creates one single
+instance -- that's why their full name is *singleton objects*, like the infamous
+design pattern -- for you and that you cannot create new instances of it.
+Objects supersede Java and C++'s static methods and variables: you can think of
+all the methods and variables inside an object as being static. Objects can also
+extend other classes, implement interfaces and be used just like any other
+intance of a class. The *static* analogy can be helpful at the beginning, but
+try to think of an object as a combined class declaration and instantiation.
 
 The entry point for every Scala program is the `main` method, which is our only
 declaration in the `HelloWorld` object. Method declarations in Scala start with
@@ -70,10 +71,19 @@ denoted by `()` and is used for methods that don't produce a result. `Unit` is
 similar to the `void` type in other languages (you can also think of `()` as a
 tuple with zero components).
 
-Scala can actually infer the result type of methods with a single exit point, so
-it would be valid to omit the `: Unit` in the code. We use the `println`
-function to retrieve the first argument and concatenate it with the string
-`"Hello, "`.
+We then use the `println` function to retrieve the first argument and concatenate it
+with the string `"Hello, "`. Scala can actually infer the result type of
+methods with a single exit point, so it would be valid to omit the `: Unit` in
+the code. And, if the result type of a method is `Unit`, you can also omit the
+`=`. Our simplified main method then looks like this:
+
+{% highlight scala %}
+object HelloWorld {
+  def main(args: Array[String]) {
+    println("Hello, " + args(0))
+  }
+}
+{% endhighlight %}
 
 Don't let the different kinds of brackets confuse you: Instead of Java and C++'s
 `<>` for type or template parameters, Scala uses `[]`. Indexing an array does not
@@ -94,4 +104,5 @@ Exercises:
    string. Change the program so it prompts for a name, reads the name, and then
    prints that instead of the command line value.
 
+Enough with the toy examples: in the next chapter, [we're going to write a parser](2_parsing.html)!
 
