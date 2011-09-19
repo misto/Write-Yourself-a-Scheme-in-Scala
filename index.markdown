@@ -40,8 +40,8 @@ available on
 
 # Contents
 
-1. [First Steps: Compiling and Running](/1_first_steps.html)
-1. Parsing
+1. [First Steps: Compiling and Running](1_first_steps.html)
+1. [Parsing](2_parsing.html)
 1. TODO
 1. TODO
 1. TODO
