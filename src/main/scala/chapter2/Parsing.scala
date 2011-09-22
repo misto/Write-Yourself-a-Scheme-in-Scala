@@ -1,37 +1,43 @@
 package chapter2
 
 import scala.util.parsing.combinator.RegexParsers
-import scala.{ List => ScalaList }
-import java.lang.{ String => ScalaString }
 
-sealed abstract class LispVal
-case class Atom(name: ScalaString) extends LispVal
-case class List(elems: ScalaList[LispVal]) extends LispVal
-case class DottedList(elems: ScalaList[LispVal], last: LispVal) extends LispVal
+abstract class LispVal
+case class Atom(name: String) extends LispVal
+case class LispList(elems: List[LispVal]) extends LispVal
+case class DottedList(elems: List[LispVal], last: LispVal) extends LispVal
 case class Number(i: Int) extends LispVal
-case class String(s: ScalaString) extends LispVal
+case class LispString(s: String) extends LispVal
 case class Bool(b: Boolean) extends LispVal
 
 object Parser extends RegexParsers {
 
-  def readExpr(source: ScalaString): ScalaString = {
-    parse(parseExpr, source) match {
-      case Success(res, _) => "Found value: «%s»" format res
-      case NoSuccess(msg, _) => "No match: «%s»" format msg
+  override val skipWhitespace = false
+
+  val symbol: Parser[String] = regex("[!#$%&|\\*-+/:<=>?@^_~]".r)
+
+  def readExpr(input: String) = {
+    parse(parseExpr, input) match {
+      case Success(res, _) => "Found value: «"+ res +"»"
+      case NoSuccess(msg, _) => "No match: «"+ msg +"»"
     }
   }
 
-  val parseString = "\"" ~> rep("[^\"]".r) <~ "\"" ^^ {
-    str => String(str.mkString)
+  def main(args: Array[String]) {
+    println(readExpr(args(0)))
+  }
+  
+  val space = rep1(" ")
+  
+  val parseString: Parser[LispString] = "\"" ~> rep("[^\"]".r) <~ "\"" map {
+    ss => LispString(ss.mkString)
   }
 
-  val letter = "[a-zA-Z]".r
+  val letter = regex("[a-zA-Z]".r)
 
-  val digit = "[0-9]".r
+  val digit = regex("[0-9]".r)
 
-  val symbol = "[!#$%&|\\*-+/:<=>?@^_~]".r
-
-  val parseAtom = (letter | symbol) ~ rep(letter | symbol | digit) ^^ {
+  val parseAtom = (letter | symbol) ~ rep(letter | symbol | digit) map {
     case first ~ rest =>
       val atom = first + rest.mkString
       atom match {
@@ -41,35 +47,22 @@ object Parser extends RegexParsers {
       }
   }
 
-  val parseNumber = digit ^^ {
-    n => Number(n.toInt)
-  }
-
-  val parseAnyList = "(" ~> repsep(parseExpr, space) ~ opt(space ~ "." ~ space ~> parseExpr) <~ ")" ^^ {
-    case head ~ Some(tail) => DottedList(head, tail)
-    case head ~ None => List(head)
+  val parseNumber = rep1(digit) map {
+    n => Number(n.mkString.toInt)
   }
 
   val parseExpr: Parser[LispVal] = parseAtom | parseNumber | parseString | parseQuoted |
-    "(" ~> (parseDottedList | parseList) <~ ")"
-
-  val parseDottedList = rep1(parseExpr <~ space) ~ ("." ~ space ~> parseExpr) ^^ {
+  "(" ~> (parseDottedList | parseList) <~ ")"
+  
+  val parseList = repsep(parseExpr, space) map {
+    exprs => LispList(exprs)
+  }
+    
+  val parseDottedList = rep1(parseExpr <~ space) ~ ("." ~ space ~> parseExpr) map {
     case head ~ tail => DottedList(head, tail)
   }
-
-  val parseQuoted = "'" ~> parseExpr ^^ {
-    expr => List(Atom("quote") :: expr :: Nil)
-  }
-
-  val parseList = repsep(parseExpr, space) ^^ List
-
-  val space = rep1(" ")
-
-  override val skipWhitespace = false
-
-  def main(args: Array[ScalaString]) {
-    val input = "(#t '(quoted (dotted * 5)) test)"
-
-    println(readExpr(input))
+    
+  val parseQuoted = "'" ~> parseExpr map {
+    expr => LispList(List(Atom("quote"), expr))
   }
 }
