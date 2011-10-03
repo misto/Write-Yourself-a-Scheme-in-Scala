@@ -14,7 +14,7 @@ object Parser extends RegexParsers {
 
   override val skipWhitespace = false
 
-  val symbol: Parser[String] = regex("[!#$%&|\\*-+/:<=>?@^_~]".r)
+  val symbol: Parser[String] = regex("[!#$%&|*+/:<=>?@^_~-]".r)
 
   def readExpr(input: String) = {
     parse(parseExpr, input) match {
