@@ -19,7 +19,7 @@ RegexParsers comes with a few handy functions to use regular expressions and
 string literals that will serve as the basic building blocks for our parser.
 
 We again start with an object, but this time let it extend `RegexParsers`.
-A `RegexParser` skips whitespace characters by default, but for .. purposes, we
+A `RegexParser` skips whitespace characters by default, but for pedagogical purposes, we
 want to do this ourselves, so we disable the skipping of whitespace by setting
 the value to false. The `override` keyword is necessary whenever we override a
 concrete method or value.
