@@ -36,7 +36,7 @@ Now, we'll define a parser that recognizes one of the symbols allowed in Scheme
 identifiers.
 
 {% highlight scala %}
-  val symbol = regex("[!#$%&|\\*-+/:<=>?@^_~]".r)
+  val symbol = regex("[!#$%&|*+/:<=>?@^_~-]".r)
 {% endhighlight %}
 
 The `regex` method we inherited from `RegexParsers` let's us create a parser
@@ -47,7 +47,7 @@ The type of `symbol` is `Parser[String]`, but Scala can figure this out from the
 the source code, you can also write:
 
 {% highlight scala %}
-  val symbol: Parser[String] = regex("[!#$%&|\\*-+/:<=>?@^_~]".r)
+  val symbol: Parser[String] = regex("[!#$%&|*+/:<=>?@^_~-]".r)
 {% endhighlight %}
 
 Let's define a method to call our parser and handle any possible errors:
@@ -128,7 +128,7 @@ need to invoke this from the root of your package hierarchy, don't enter
     % scala chapter2.Parser :
     Found value: «:»
     % scala chapter2.Parser abc
-    No match: «string matching regex `[!#$%&|\*-+/:<=>?@^_~]' expected but `a' found»
+    No match: «string matching regex `[!#$%&|*+/:<=>?@^_~-]' expected but `a' found»
 
 ## Whitespace
 
@@ -137,7 +137,7 @@ progressively more complicated expressions. The current parser chokes if there's
 whitespace preceding our symbol:
 
     % scala chapter2.Parser " :"
-    No match: «string matching regex `[!#$%&|\*-+/:<=>?@^_~]' expected but ` ' found»
+    No match: «string matching regex `[!#$%&|*+/:<=>?@^_~-]' expected but ` ' found»
 
 Let's fix that, so that we ignore whitespace.
 
@@ -175,7 +175,7 @@ shortly:
     % scala chapter2.Parser "%"
     No match: «` ' expected but `%' found»
     % scala chapter2.Parser "     abc"
-    No match: «string matching regex `[!#$%&|\*-+/:<=>?@^_~]' expected but `a' found»
+    No match: «string matching regex `[!#$%&|*+/:<=>?@^_~-]' expected but `a' found»
 
 ## Return Values
 
