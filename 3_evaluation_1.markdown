@@ -12,7 +12,7 @@ steps, but fairly soon you'll be progressing to doing working computations.
 Again, we start with a new package, import the declarations of the previous
 chapter and create a new object for our evaluator.
 
-{% highlight scala % }
+{% highlight scala %}
 package chapter3
 
 import chapter2._
@@ -25,7 +25,7 @@ object Evaluator {
 Let's start by telling Scala how to print out a string representation of the
 various possible `LispVals`:
 
-{% highlight scala % }
+{% highlight scala %}
   def showVal(lv: LispVal): String = lv match {
     case LispString(contents) => 
       "\"" + contents + "\""
@@ -50,7 +50,7 @@ The `LispList` and `DottedList` clauses work similarly, but we need to define a 
 
 The `unwordsList` function glues together a list of words with spaces. Since we're dealing with a list of `LispVals` instead of `Strings`, we first convert the `LispVals` into their string representations via `showval` and then concatenate them with `mkString`:
 
-{% highlight scala % }
+{% highlight scala %}
   def unwordsList(lvs: List[LispVal]): String = {
     lvs.map(showVal).mkString(" ")
   }
@@ -58,7 +58,7 @@ The `unwordsList` function glues together a list of words with spaces. Since we'
 
 Let's try things out by creating a new `readExpr` function so it returns the string representation of the value actually parsed, instead of just "Found value":
 
-{% highlight scala % }
+{% highlight scala %}
   def readExpr(input: String): String = {
     import Parser._
     parse(parseExpr, input) match {
@@ -74,7 +74,7 @@ We are using the `parse` method from Chapter 2's `Parser`, `Success` and `NoSucc
 
 All that's left is a `main` method and then we're ready to run it.
 
-{% highlight scala % }
+{% highlight scala %}
   def main(args: Array[String]) {
     println(readExpr(args(0)))
   }
@@ -91,7 +91,7 @@ Now, we start with the beginnings of an evaluator. The purpose of an evaluator i
 
 Evaluating numbers, strings, booleans, and quoted lists is fairly simple: return the datum itself.
 
-{% highlight scala % }
+{% highlight scala %}
   def eval(lv: LispVal): LispVal = lv match {
     case v @ LispString(_) => v
     case v @ Number(_) => v
@@ -104,7 +104,7 @@ This introduces a new type of pattern. The notation `v @ LispString(_)` matches 
 
 The last clause is our first introduction to nested patterns. The type of data contained by `LispList` is `List[LispVal]`, a list of `LispVals`. We match that against the specific two-element list `List(Atom("quote"), v)`, a list where the first element is the symbol "quote" and the second element can be anything. Then we return that second element. Another way to write exactly the same pattern is
 
-{% highlight scala % }
+{% highlight scala %}
     case LispList(Atom("quote") :: v :: Nil) => v
 {% endhighlight %}
 
@@ -112,7 +112,7 @@ The cons operator `::` can be used to construct and destruct lists. You can read
 
 Let's integrate eval into our existing code. Start by changing `readExpr` back so it returns the expression instead of a string representation of the expression:
 
-{% highlight scala % }
+{% highlight scala %}
   def readExpr(input: String): LispVal = {
     import Parser._
     parse(parseExpr, input) match {
@@ -126,7 +126,7 @@ Let's integrate eval into our existing code. Start by changing `readExpr` back s
 
 In the error case, we simply wrap the error message in a `LispString`. And then change our `main` function to read an expression, evaluate it, convert it to a string, and print it out.
 
-{% highlight scala % }
+{% highlight scala %}
   def main(args: Array[String]) {
     println(showVal(eval(readExpr(args(0)))))
   }
@@ -145,6 +145,6 @@ Compile and run the code the normal way:
 
 We still can't do all that much useful with the program (witness the failed (+ 2 2) call), but the basic skeleton is in place. Soon, we'll be extending it with some functions to make it useful.
 
-{% highlight scala % }
+{% highlight scala %}
 {% endhighlight %}
 
