@@ -74,6 +74,6 @@ object Evaluator {
       case _ => 
         0
     }
-    Number(args.map(unpackNum).reduceLeft(op))
+    Number(args.map(unpackNum).reduceRight(op))
   }
 }
