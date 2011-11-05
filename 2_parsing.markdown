@@ -397,6 +397,3 @@ arbitrarily deep. Thus, we get a full Lisp reader with only a few definitions.
 That's the power of recursion.
 
 In the next chapter, we're going to [write an evaluator](3_evaluation_1.html)!
-
-{% highlight scala %}
-{% endhighlight %}

@@ -42,8 +42,8 @@ available on
 
 1. [First Steps: Compiling and Running](1_first_steps.html)
 1. [Parsing](2_parsing.html)
-1. TODO
-1. TODO
+1. [Evaluation, Part 1](3_evaluation_1.html)
+1. [Error Checking and Exceptions](4_error_checking_and_exceptions.html)
 1. TODO
 1. TODO
 1. TODO
