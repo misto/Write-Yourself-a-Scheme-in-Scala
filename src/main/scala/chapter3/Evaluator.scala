@@ -30,10 +30,9 @@ object Evaluator {
     case v @ LispString(_) => v
     case v @ Number(_) => v
     case v @ Bool(_) => v
-    case LispList(Atom("quote") :: v :: Nil) => v
-    
-//    case LispList(Atom(func) :: args) => 
-//      apply(func, args map eval)
+    case LispList(Atom("quote") :: v :: Nil) => v    
+    case LispList(Atom(func) :: args) => 
+      apply(func, args map eval)
   }
   
   def readExpr(input: String): LispVal = {
@@ -50,25 +49,26 @@ object Evaluator {
     println(showVal(eval(readExpr(args(0)))))
   }
   
-  def apply(func: String, lvs: List[LispVal]): LispVal = {
-    primitives.get(func).map(f =>  f(lvs)).getOrElse(Bool(false))
+  def apply(funName: String, lvs: List[LispVal]): LispVal = {
+    val fun = primitives.get(funName)
+    val result = fun.map(f =>  f(lvs))
+    result.getOrElse(Bool(false))
   }
 
   val primitives: Map[String, List[LispVal] => LispVal] = Map(
-    "+" -> numericBinop(_ + _),
-    "-" -> numericBinop(_ - _),
-    "*" -> numericBinop(_ * _),
-    "/" -> numericBinop(_ / _),
-    "remainder" -> numericBinop(_ % _)
+    "+" -> numericBinop((x, y) => x + y),
+    "-" -> numericBinop((x, y) => x - y),
+    "*" -> numericBinop((x, y) => x * y),
+    "/" -> numericBinop((x, y) => x / y),
+    "remainder" -> numericBinop((x, y) => x % y)
   )
   
   def numericBinop(op: (Int, Int) => Int)(args: List[LispVal]): LispVal = {
-    import scala.util.control.Exception._
     def unpackNum(lv: LispVal): Int = lv match {
       case Number(n) => 
         n
-      case LispString(s) => 
-        failAsValue(classOf[NumberFormatException])(0)(s.toInt)
+      case LispString(s) if s.matches("\\d+") => 
+        s.toInt
       case LispList(List(lv)) => 
         unpackNum(lv)
       case _ => 
