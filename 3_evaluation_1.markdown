@@ -206,7 +206,7 @@ Look at the type of `primitives`. It's a map from `String` to `List[LispVal] => 
       case _ => 
         0
     }
-    Number(args.map(unpackNum).reduceLeft(op))
+    Number(args.map(unpackNum).reduceRight(op))
   }
 {% endhighlight %}
 
@@ -219,6 +219,12 @@ If we're unpacking a `LispString` that consists of only digits, then we convert 
 For lists, we pattern-match against the one-element list and try to unpack that. Anything else falls through to the next case.
 
 If we can't parse the number, for any reason, we'll return 0 for now. We'll fix this shortly so that it signals an error.
+
+Now to calculate our `Number`, we first map `unpackNum` over `args` and then reduce this list of `Ints` with `op`. reduceRight belongs to the family of [fold functions](http://en.wikipedia.org/wiki/Fold_(higher-order_function)). For example, if we have a `List(1, 2, 3, 4)` and an `op` that does addition, `reduceRight` performs the following: `op(1, op(2, op(3, 4)))` or `1 + (2 + (3 + (4)))`. The reduce operation will fail on an empty list, because it doesn't have a value to return. More general is `foldRight`, which also takes an initial value in addition to the reduction function. Using `foldRight` and an initial value of `0`, our computation is `1 + (2 + (3 + (4 + 0)))`. We have to use `reduce` because the initial value depends on the kind of computation we do: for addition and subtraction it is `0` and for multiplication and division it's `1`.
+
+To make the family complete, there also exist `foldLeft` and `reduceLeft` functions. The difference is how the operands are associated: `reduceLeft` computes `((1 + 2) + 3) + 4` and `foldLeft` `(((0 + 1) + 2) + 3) + 4`. 
+
+We will see more folds in the next chapter.
 
 Compile and run this the normal way. Note how we get nested expressions "for free" because we call eval on each of the arguments of a function:
 
