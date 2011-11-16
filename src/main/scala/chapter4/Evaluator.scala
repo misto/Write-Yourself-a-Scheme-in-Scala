@@ -10,9 +10,11 @@ case class BadSpecialForm(message: String, form: LispVal) extends LispError
 case class NotFunction(message: String, func: String) extends LispError
 case class UnboundVar(message: String, varname: String) extends LispError
 case class Default(message: String) extends LispError
-
+ 
 object Evaluator {
-    
+        
+  import chapter3.Evaluator.{showVal, unwordsList}
+
   def showError(le: LispError): String = le match {
     case UnboundVar(message, varname) =>
       message + ": " + varname
@@ -29,39 +31,17 @@ object Evaluator {
     case Default(message) =>
       message
   }
-  
+   
   type ThrowsError[T] = Either[LispError, T]
-
-  def throwError(e: LispError): ThrowsError[Nothing] = Left(e)
   
-  def trapError(action: ThrowsError[String]): ThrowsError[String] = {
-    action match {
-      case Left(error) => Right(showError(error))
-      case right => right
+  def readExpr(input: String): ThrowsError[LispVal] = {
+    import Parser._
+    parse(parseExpr, input) match {
+      case Success(res, _) => 
+        Right(res)
+      case NoSuccess(msg, _) => 
+        Left(ParseError(msg))
     }
-  }
-
-  def extractValue[T](te: ThrowsError[T]): T = te.right.get
-  
-  def showVal(lv: LispVal): String = lv match {
-    case LispString(contents) => 
-      "\"" + contents + "\""
-    case Atom(name) => 
-      name
-    case Number(contents) => 
-      contents.toString
-    case Bool(true) => 
-      "#t"
-    case Bool(false) => 
-      "#f"
-    case LispList(contents) => 
-      "(" + unwordsList(contents) + ")"
-    case DottedList(head, tail) => 
-      "(" + unwordsList(head) + " . " + showVal(tail) + ")"
-  }
-
-  def unwordsList(lvs: List[LispVal]): String = {
-    lvs.map(showVal).mkString(" ")
   }
   
   def eval(lv: LispVal): ThrowsError[LispVal] = lv match {
@@ -71,45 +51,26 @@ object Evaluator {
     case LispList(Atom("quote") :: v :: Nil) => Right(v)  
     case LispList(Atom(func) :: args) => 
       
-      val acc: ThrowsError[List[LispVal]] = Right(Nil)
-      
-      val evaluatedArgs = args.foldRight(acc) { (lv, acc) =>
-        eval(lv).fold(throwError, lv => acc.fold(throwError, lvs => Right(lv :: lvs)))
-      }
-      
-      val evaluatedArgs2 = args.foldRight(acc) { (lv, acc) =>
-        (eval(lv), acc) match {
-          case (Right(lv), Right(lvs)) =>
-            Right(lv :: lvs)
-          case (Left(error), _) => 
-            throwError(error)
+      def evalArg(lv: LispVal, acc: ThrowsError[List[LispVal]]) = {
+        eval(lv).right.flatMap { lv =>
+          acc.right.map(lvs => lv :: lvs)
         }
       }
       
-      evaluatedArgs2.fold(throwError, args => apply(func, args))
+      val acc: ThrowsError[List[LispVal]] = Right(Nil)
+      
+      val evaluatedArgs = args.foldRight(acc)(evalArg)
+      
+      evaluatedArgs.right.flatMap(args => apply(func, args))
       
     case badForm =>
-      throwError(BadSpecialForm("Unrecognized special form", badForm))
-  }
-  
-  def readExpr(input: String): ThrowsError[LispVal] = {
-    import Parser._
-    parse(parseExpr, input) match {
-      case Success(res, _) => 
-        Right(res)
-      case NoSuccess(msg, _) => 
-        throwError(ParseError(msg))
-    }
-  }
-  
-  def main(args: Array[String]) {
-    val result = readExpr(args(0)).right.map(eval).joinRight.right.map(showVal)
-    println(extractValue(trapError(result)))
+      Left(BadSpecialForm("Unrecognized special form", badForm))
   }
   
   def apply(funName: String, lvs: List[LispVal]): ThrowsError[LispVal] = {
-    val result = primitives.get(funName).map(f => f(lvs))
-    result.getOrElse(throwError(NotFunction("Unrecognized primitive function args", funName)))
+    val fun = primitives.get(funName)
+    val result = fun.map(f => f(lvs))
+    result.getOrElse(Left(NotFunction("Unrecognized primitive function args", funName)))
   }
 
   val primitives: Map[String, List[LispVal] => ThrowsError[LispVal]] = Map(
@@ -120,30 +81,40 @@ object Evaluator {
     "remainder" -> numericBinop((x, y) => x % y)
   )
   
+  def unpackNum(lv: LispVal): ThrowsError[Int] = lv match {
+    case Number(n) => 
+      Right(n)
+    case LispString(s) if s.matches("\\d+") => 
+      Right(s.toInt)
+    case LispList(List(lv)) => 
+      unpackNum(lv)
+    case notNum => 
+      Left(TypeMismatch("number", notNum))
+  }
+  
   def numericBinop(op: (Int, Int) => Int)(args: List[LispVal]): ThrowsError[LispVal] = {
-    def unpackNum(lv: LispVal): ThrowsError[Int] = lv match {
-      case Number(n) => 
-        Right(n)
-      case LispString(s) if s.matches("\\d+") => 
-        Right(s.toInt)
-      case LispList(List(lv)) => 
-        unpackNum(lv)
-      case notNum => 
-        throwError(TypeMismatch("number", notNum))
-    }
     args match {
-      case singleVal @ (Nil | List(_)) =>
-        throwError(NumArgs(2, singleVal))
-      case args =>
-        val result = args.map(unpackNum).reduceRight { (unpacked1, unpacked2) =>
-          (unpacked1, unpacked2) match {
+      case singleVal @ List(_) =>
+        Left(NumArgs(2, singleVal))
+      case args => 
+        def reduce(fst: ThrowsError[Int], snd: ThrowsError[Int]): ThrowsError[Int] = {
+          (fst, snd) match {
             case (Right(n1), Right(n2)) =>
               Right(op(n1, n2))
             case (Left(error), _) =>
-              throwError(error)
+              Left(error)
+            case (_, Left(error)) =>
+              Left(error)
           }
         }
-        result.right.map(Number)
+        args.map(unpackNum).reduceRight(reduce).right.map(n => Number(n))
     }
+  }
+  
+  def main(args: Array[String]) {    
+    val expr = readExpr(args(0))
+    val evaluated = expr.right.flatMap(eval)
+    val result = evaluated.right.map(showVal)
+    println(result.left.map(showError).merge)
   }
 }
