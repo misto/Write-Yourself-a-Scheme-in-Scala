@@ -44,11 +44,18 @@ various possible `LispVals`:
   }
 {% endhighlight %}
 
-We are again using pattern matching to handle the different `LispVals`. From the `Bool` case, you can see that pattern matching can also be used to check against concrete values without binding it to a name. The right hand side of each case-clause results in a `String`.
+We are again using pattern matching to handle the different `LispVals`. From the
+`Bool` case, you can see that pattern matching can also be used to check against
+concrete values without binding it to a name. The right hand side of each
+case-clause results in a `String`.
 
-The `LispList` and `DottedList` clauses work similarly, but we need to define a helper function `unwordsList` to convert the contained list into a `String`.
+The `LispList` and `DottedList` clauses work similarly, but we need to define a
+helper function `unwordsList` to convert the contained list into a `String`.
 
-The `unwordsList` function glues together a list of words with spaces. Since we're dealing with a list of `LispVals` instead of `Strings`, we first convert the `LispVals` into their string representations via `showval` and then concatenate them with `mkString`:
+The `unwordsList` function glues together a list of words with spaces. Since
+we're dealing with a list of `LispVals` instead of `Strings`, we first convert
+the `LispVals` into their string representations via `showval` and then
+concatenate them with `mkString`:
 
 {% highlight scala %}
   def unwordsList(lvs: List[LispVal]): String = {
@@ -56,7 +63,9 @@ The `unwordsList` function glues together a list of words with spaces. Since we'
   }
 {% endhighlight %}
 
-Let's try things out by creating a new `readExpr` function so it returns the string representation of the value actually parsed, instead of just "Found value":
+Let's try things out by creating a new `readExpr` function so it returns the
+string representation of the value actually parsed, instead of just "Found
+value":
 
 {% highlight scala %}
   def readExpr(input: String): String = {
@@ -70,7 +79,12 @@ Let's try things out by creating a new `readExpr` function so it returns the str
   }
 {% endhighlight %}
 
-We are using the `parse` method from Chapter 2's `Parser`, `Success` and `NoSuccess` are also coming from `Parser`. First we import the declarations of the `Parser` object, so we can bring all the definitions we use into our scope. Otherwise, we would need to write `Parser.parse` and `Parser.Success`. We then pattern match on the result as usual but use `showVal` to turn the parse tree into a readable string.
+We are using the `parse` method from Chapter 2's `Parser`, `Success` and
+`NoSuccess` are also coming from `Parser`. First we import the declarations of
+the `Parser` object, so we can bring all the definitions we use into our scope.
+Otherwise, we would need to write `Parser.parse` and `Parser.Success`. We then
+pattern match on the result as usual but use `showVal` to turn the parse tree
+into a readable string.
 
 All that's left is a `main` method and then we're ready to run it.
 
@@ -87,9 +101,14 @@ All that's left is a `main` method and then we're ready to run it.
 
 ### Beginnings of an evaluator: Primitives
 
-Now, we start with the beginnings of an evaluator. The purpose of an evaluator is to map some "code" data type into some "data" data type, the result of the evaluation. In Lisp, the data types for both code and data are the same, so our evaluator will return a `LispVal`. Other languages often have more complicated code structures, with a variety of syntactic forms.
+Now, we start with the beginnings of an evaluator. The purpose of an evaluator
+is to map some "code" data type into some "data" data type, the result of the
+evaluation. In Lisp, the data types for both code and data are the same, so our
+evaluator will return a `LispVal`. Other languages often have more complicated
+code structures, with a variety of syntactic forms.
 
-Evaluating numbers, strings, booleans, and quoted lists is fairly simple: return the datum itself.
+Evaluating numbers, strings, booleans, and quoted lists is fairly simple: return
+the datum itself.
 
 {% highlight scala %}
   def eval(lv: LispVal): LispVal = lv match {
@@ -100,17 +119,32 @@ Evaluating numbers, strings, booleans, and quoted lists is fairly simple: return
 }
 {% endhighlight %}
 
-This introduces a new type of pattern. The notation `v @ LispString(_)` matches against any `LispVal` that's a `String` and then binds `v` to the whole `LispVal`, and not just the contents of the `LispString`. The result has type `LispVal` instead of type `String`. Again, the underbar is the "don't care" variable, matching any value yet not binding it to a variable. It can be used in any pattern, but is most useful with @-patterns (where you bind the variable to the whole pattern) and with simple type-tests where you're just interested in the type of the matchee.
+This introduces a new type of pattern. The notation `v @ LispString(_)` matches
+against any `LispVal` that's a `String` and then binds `v` to the whole
+`LispVal`, and not just the contents of the `LispString`. The result has type
+`LispVal` instead of type `String`. Again, the underbar is the "don't care"
+variable, matching any value yet not binding it to a variable. It can be used in
+any pattern, but is most useful with @-patterns (where you bind the variable to
+the whole pattern) and with simple type-tests where you're just interested in
+the type of the matchee.
 
-The last clause is our first introduction to nested patterns. The type of data contained by `LispList` is `List[LispVal]`, a list of `LispVals`. We match that against the specific two-element list `List(Atom("quote"), v)`, a list where the first element is the symbol "quote" and the second element can be anything. Then we return that second element. Another way to write exactly the same pattern is
+The last clause is our first introduction to nested patterns. The type of data
+contained by `LispList` is `List[LispVal]`, a list of `LispVals`. We match that
+against the specific two-element list `List(Atom("quote"), v)`, a list where the
+first element is the symbol "quote" and the second element can be anything. Then
+we return that second element. Another way to write exactly the same pattern is
 
 {% highlight scala %}
     case LispList(Atom("quote") :: v :: Nil) => v
 {% endhighlight %}
 
-The cons operator `::` can be used to construct and destruct lists. You can read it as `Atom("quote")` prepended to a `LispVal` bound to `v` prepended to `Nil`, which stands for the empty list.
+The cons operator `::` can be used to construct and destruct lists. You can read
+it as `Atom("quote")` prepended to a `LispVal` bound to `v` prepended to `Nil`,
+which stands for the empty list.
 
-Let's integrate eval into our existing code. Start by changing `readExpr` back so it returns the expression instead of a string representation of the expression:
+Let's integrate eval into our existing code. Start by changing `readExpr` back
+so it returns the expression instead of a string representation of the
+expression:
 
 {% highlight scala %}
   def readExpr(input: String): LispVal = {
@@ -124,7 +158,9 @@ Let's integrate eval into our existing code. Start by changing `readExpr` back s
   }
 {% endhighlight %}
 
-In the error case, we simply wrap the error message in a `LispString`. And then change our `main` function to read an expression, evaluate it, convert it to a string, and print it out.
+In the error case, we simply wrap the error message in a `LispString`. And then
+change our `main` function to read an expression, evaluate it, convert it to a
+string, and print it out.
 
 {% highlight scala %}
   def main(args: Array[String]) {
@@ -143,11 +179,14 @@ Compile and run the code the normal way:
     % scala chapter3.Evaluator "(+ 2 2)"
     scala.MatchError: LispList(List(Atom(+), Number(2), Number(2))) (of class chapter2.LispList)
 
-We still can't do all that much useful with the program (witness the failed (+ 2 2) call), but the basic skeleton is in place. Soon, we'll be extending it with some functions to make it useful.
+We still can't do all that much useful with the program (witness the failed (+ 2
+2) call), but the basic skeleton is in place. Soon, we'll be extending it with
+some functions to make it useful.
 
 ### Adding basic primitives
 
-Next, we'll improve our Scheme so we can use it as a simple calculator. It's still not yet a "programming language", but it's getting close.
+Next, we'll improve our Scheme so we can use it as a simple calculator. It's
+still not yet a "programming language", but it's getting close.
 
 Begin by adding a clause to eval to handle function application.
 
@@ -156,9 +195,16 @@ Begin by adding a clause to eval to handle function application.
       apply(func, args map eval)
 {% endhighlight %}
 
-This clause matches all lists that start with an atom and a varying number of arguments: `args` simply matches the whole tail of the list. For example, if we passed `(+ 2 2)` to `eval`, `func` would be bound to `+` and `args` would be bound to `List(Number(2), Number( 2))`. 
+This clause matches all lists that start with an atom and a varying number of
+arguments: `args` simply matches the whole tail of the list. For example, if we
+passed `(+ 2 2)` to `eval`, `func` would be bound to `+` and `args` would be
+bound to `List(Number(2), Number( 2))`. 
 
-The rest of the clause consists of a couple of functions we've seen before and one we haven't defined yet. We have to recursively evaluate each argument, so we map `eval` over the `args`. This is what lets us write compound expressions like `(+ 2 (- 3 1) (* 5 4))`. Then we take the resulting list of evaluated arguments, and pass it and the original function to `apply`:
+The rest of the clause consists of a couple of functions we've seen before and
+one we haven't defined yet. We have to recursively evaluate each argument, so we
+map `eval` over the `args`. This is what lets us write compound expressions like
+`(+ 2 (- 3 1) (* 5 4))`. Then we take the resulting list of evaluated arguments,
+and pass it and the original function to `apply`:
 
 {% highlight scala %}
   def apply(funName: String, lvs: List[LispVal]): LispVal = {
@@ -168,9 +214,20 @@ The rest of the clause consists of a couple of functions we've seen before and o
   }
 {% endhighlight %}
 
-`primitives` is a map of strings to functions we will define in a moment. The `get` method looks up a key; however, lookup will fail if no entry in the map contains the matching key. To express this, it returns an instance of the type `Option`. This means that `fun` is either some function or `None`, if the user tried to evaluate a non-existing function. We can use `Options` `map` function to safely work with the value wrapped inside the `Option`, in the `None` case, it simply returns another `None`, and if we have a function, we apply it to the arguments in `lvs`. The `result` is again of type `Option`. `getOrElse` allows us the unwrap the value contained in the `Option`. If the function isn't found, we return a `Bool(False)` value, equivalent to `#f` (we'll add more robust error-checking later).
+`primitives` is a map of strings to functions we will define in a moment. The
+`get` method looks up a key; however, lookup will fail if no entry in the map
+contains the matching key. To express this, it returns an instance of the type
+`Option`. This means that `fun` is either some function or `None`, if the user
+tried to evaluate a non-existing function. We can use `Options` `map` function
+to safely work with the value wrapped inside the `Option`, in the `None` case,
+it simply returns another `None`, and if we have a function, we apply it to the
+arguments in `lvs`. The `result` is again of type `Option`. `getOrElse` allows
+us the unwrap the value contained in the `Option`. If the function isn't found,
+we return a `Bool(False)` value, equivalent to `#f` (we'll add more robust
+error-checking later).
 
-Once you're more familiar with optional values and higher-order functions, you can write the above as:
+Once you're more familiar with optional values and higher-order functions, you
+can write the above as:
 
 {% highlight scala %}
   def apply(funName: String, lvs: List[LispVal]): LispVal = {
@@ -190,9 +247,18 @@ Next, we define the map of primitives that we support:
   )
 {% endhighlight %}
 
-Look at the type of `primitives`. It's a map from `String` to `List[LispVal] => LispVal`, so the values are functions! In Scala, you can easily store functions in data structures. The `Map` is built from a number of `Pairs`. The Scala standard library defines a `->` infix operator so pairs can be constructed in a visually pleasing way. Also, the functions that we store are themselves the result of a function, `numericBinop`, which we haven't defined yet. (This is why we say that Scala has first-class functions, it's simly the ability to store, pass as arguments and return functions.)
+Look at the type of `primitives`. It's a map from `String` to `List[LispVal] =>
+LispVal`, so the values are functions! In Scala, you can easily store functions
+in data structures. The `Map` is built from a number of `Pairs`. The Scala
+standard library defines a `->` infix operator so pairs can be constructed in a
+visually pleasing way. Also, the functions that we store are themselves the
+result of a function, `numericBinop`, which we haven't defined yet. (This is why
+we say that Scala has first-class functions, it's simly the ability to store,
+pass as arguments and return functions.)
 
-`numericBinop` takes a function that works on two `Ints` and wraps it with code to unpack an argument list, apply the function to it, and wrap the result up in our `Number` constructor.
+`numericBinop` takes a function that works on two `Ints` and wraps it with code
+to unpack an argument list, apply the function to it, and wrap the result up in
+our `Number` constructor.
 
 {% highlight scala %}
   def numericBinop(op: (Int, Int) => Int)(args: List[LispVal]): LispVal = {
@@ -210,23 +276,47 @@ Look at the type of `primitives`. It's a map from `String` to `List[LispVal] => 
   }
 {% endhighlight %}
 
-As with R5RS Scheme, we don't limit ourselves to only two arguments. Our numeric operations can work on a list of any length, so (+ 2 3 4) = 2 + 3 + 4, and (- 15 5 3 2) = 15 - 5 - 3 - 2. We first define another helper method `unpackNum` inside `numericBinop`, which converts a `LispVal` into an `Int`.
+As with R5RS Scheme, we don't limit ourselves to only two arguments. Our numeric
+operations can work on a list of any length, so (+ 2 3 4) = 2 + 3 + 4, and (- 15
+5 3 2) = 15 - 5 - 3 - 2. We first define another helper method `unpackNum`
+inside `numericBinop`, which converts a `LispVal` into an `Int`.
 
-Unlike R5RS Scheme, we're implementing a form of weak typing. That means that if a value can be interpreted as a number (like the string "2"), we'll use it as one, even if it's tagged as a string. We do this by adding a couple extra clauses to `unpackNum`. 
+Unlike R5RS Scheme, we're implementing a form of weak typing. That means that if
+a value can be interpreted as a number (like the string "2"), we'll use it as
+one, even if it's tagged as a string. We do this by adding a couple extra
+clauses to `unpackNum`.
 
-If we're unpacking a `LispString` that consists of only digits, then we convert it using the `toInt` method.
+If we're unpacking a `LispString` that consists of only digits, then we convert
+it using the `toInt` method.
 
-For lists, we pattern-match against the one-element list and try to unpack that. Anything else falls through to the next case.
+For lists, we pattern-match against the one-element list and try to unpack that.
+Anything else falls through to the next case.
 
-If we can't parse the number, for any reason, we'll return 0 for now. We'll fix this shortly so that it signals an error.
+If we can't parse the number, for any reason, we'll return 0 for now. We'll fix
+this shortly so that it signals an error.
 
-Now to calculate our `Number`, we first map `unpackNum` over `args` and then reduce this list of `Ints` with `op`. reduceRight belongs to the family of [fold functions](http://en.wikipedia.org/wiki/Fold_(higher-order_function)). For example, if we have a `List(1, 2, 3, 4)` and an `op` that does addition, `reduceRight` performs the following: `op(1, op(2, op(3, 4)))` or `1 + (2 + (3 + (4)))`. The reduce operation will fail on an empty list, because it doesn't have a value to return. More general is `foldRight`, which also takes an initial value in addition to the reduction function. Using `foldRight` and an initial value of `0`, our computation is `1 + (2 + (3 + (4 + 0)))`. We have to use `reduce` because the initial value depends on the kind of computation we do: for addition and subtraction it is `0` and for multiplication and division it's `1`.
+Now to calculate our `Number`, we first map `unpackNum` over `args` and then
+reduce this list of `Ints` with `op`. reduceRight belongs to the family of [fold
+functions](http://en.wikipedia.org/wiki/Fold_(higher-order_function&#41;). Let
+us take a look at a simple example: if we have a `List(1, 2, 3, 4)` and an `op`
+that does addition, then `reduceRight` expands to the following calculations:
+`op(1, op(2, op(3, 4)))` or `1 + (2 + (3 + (4)))`. A problem with the reduce
+operation is that it will fail on an empty list, because in that case it doesn't
+have a value to return. The more general function is called `foldRight`, which
+takes an initial value in addition to the reduction function. Using `foldRight`
+and an initial value of `0`, our computation looks like this: `1 + (2 + (3 + (4
++ 0)))`. In the implementation of `numericBinop`, we use `reduce` because the
+initial value depends on the kind of computation we do: for addition and
+subtraction it is `0` and for multiplication and division it is `1`.
 
-To make the family complete, there also exist `foldLeft` and `reduceLeft` functions. The difference is how the operands are associated: `reduceLeft` computes `((1 + 2) + 3) + 4` and `foldLeft` `(((0 + 1) + 2) + 3) + 4`. 
+To make the `fold` family complete, there also exist `foldLeft` and `reduceLeft`
+functions. They differ in how the operands are associated: `reduceLeft` computes
+`((1 + 2) + 3) + 4` and `foldLeft` `(((0 + 1) + 2) + 3) + 4`.
 
 We will see more folds in the next chapter.
 
-Compile and run this the normal way. Note how we get nested expressions "for free" because we call eval on each of the arguments of a function:
+Compile and run this the normal way. Note how we get nested expressions "for
+free" because we call eval on each of the arguments of a function:
 
     % scala chapter3.Evaluator "(+ 2 2)"
     4
@@ -239,9 +329,16 @@ Compile and run this the normal way. Note how we get nested expressions "for fre
 
 Exercises:
 
-1. Add primitives to perform the various [type-testing](http://www.schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.3) functions of R5RS: symbol?, string?, number?, etc.
-1. Change unpackNum so that it always returns 0 if the value is not a number, even if it's a string or list that could be parsed as a number.
-1. Add the [symbol-handling functions](http://www.schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.3.3) from R5RS. A symbol is what we've been calling an Atom in our data constructors.
+1. Add primitives to perform the various
+   [type-testing](http://www.schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.3)
+   functions of R5RS: symbol?, string?, number?, etc.
+1. Change unpackNum so that it always returns 0 if the value is not a number,
+   even if it's a string or list that could be parsed as a number.
+1. Add the [symbol-handling
+   functions](http://www.schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.3.3)
+   from R5RS. A symbol is what we've been calling an Atom in our data
+   constructors.
 
-In the next chapter, we’re going to add [error checking](4_error_checking_and_exceptions.html).
+In the next chapter, we’re going to add [error
+checking](4_error_checking_and_exceptions.html).
 
