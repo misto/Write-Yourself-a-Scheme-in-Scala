@@ -47,11 +47,13 @@ declaration might be surprising: an object named `HelloWorld`. An object is
 almost like a class, except that the compiler automatically creates one single
 instance -- that's why their full name is *singleton objects*, like the infamous
 design pattern -- for you and that you cannot create new instances of it.
-Objects supersede Java and C++'s static methods and variables: you can think of
-all the methods and variables inside an object as being static. Objects can also
-extend other classes, implement interfaces and be used just like any other
-intance of a class. The *static* analogy can be helpful at the beginning, but
-try to think of an object as a combined class declaration and instantiation.
+Objects supersede Java and C++'s static methods and variables, because all use
+cases of statics are covered by `objects`, but it simplifies the language. If
+you prefer, you can think of all the methods and variables inside an object as
+being static. Objects can also extend other classes, implement interfaces and be
+used just like any other intance of a class. The *static* analogy can be helpful
+at the beginning, but try to think of an object as a combined class declaration
+and instantiation.
 
 The entry point for every Scala program is the `main` method, which is our only
 declaration in the `HelloWorld` object. Method declarations in Scala start with
